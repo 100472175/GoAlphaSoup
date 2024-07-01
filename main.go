@@ -47,32 +47,20 @@ func main() {
 		for _, word := range words {
 			wg.Add(1)
 			go func(word string, wg *sync.WaitGroup) {
-				result := FindWord(grid, word)
-				if len(result) == 0 {
-					fmt.Println("La palabra", word, "no se encontró")
-				} else {
-					fmt.Println("La palabra", word, "se encontró")
-				}
+				FindWord(grid, word)
 				wg.Done()
 			}(word, &wg)
 		}
 		wg.Wait()
-		fmt.Println("Tiempo de ejecución:", time.Since(time_start))
-		fmt.Fprint(os.Stderr, "Tiempo de ejecución:", time.Since(time_start), "\n")
+		fmt.Fprint(os.Stderr, "Tiempo de ejecución: ", time.Since(time_start), "\n")
 
 	} else {
 		// Find the words in the grid and search for each word sequentially
 		time_start := time.Now()
 		for _, word := range words {
-			result := FindWord(grid, word)
-			if len(result) == 0 {
-				fmt.Println("La palabra", word, "no se encontró")
-			} else {
-				fmt.Println("La palabra", word, "se encontró")
-			}
+			FindWord(grid, word)
 		}
-		fmt.Println("Tiempo de ejecución:", time.Since(time_start))
-		fmt.Fprint(os.Stderr, "Tiempo de ejecución:", time.Since(time_start), "\n")
+		fmt.Fprint(os.Stderr, "Tiempo de ejecución: ", time.Since(time_start), "\n")
 
 	}
 
