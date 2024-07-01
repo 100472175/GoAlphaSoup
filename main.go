@@ -12,8 +12,18 @@ var directions = [][2]int{{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, 
 
 func main() {
 	// Check the number of arguments
-	if len(os.Args) != 4 {
-		fmt.Println("Usage: alphabet-soup <filename> <words> <multithread [1|0]")
+	if len(os.Args) != 5 {
+		fmt.Println("Usage: alphabet-soup <filename> <words> <multithread [Y|N]> <output [Y|N]>")
+		return
+	}
+
+	if os.Args[3] != "Y" && os.Args[3] != "N" {
+		fmt.Println("The third argument must be 1 or 0")
+		return
+	}
+
+	if os.Args[4] != "Y" && os.Args[4] != "N" {
+		fmt.Println("The fourth argument must be 1 or 0")
 		return
 	}
 
@@ -35,19 +45,23 @@ func main() {
 	}
 	fmt.Println("Tiempo de lectura de las palabras:", time.Since(time_start))
 
-	if os.Args[3] != "1" && os.Args[3] != "0" {
-		fmt.Println("The third argument must be 1 or 0")
-		return
-	}
-
-	if os.Args[3] == "1" {
+	if os.Args[3] == "Y" {
 		// Find the words in the grid and parallelize the search for each word
 		time_start := time.Now()
 		wg := sync.WaitGroup{}
 		for _, word := range words {
 			wg.Add(1)
 			go func(word string, wg *sync.WaitGroup) {
-				FindWord(grid, word)
+				if os.Args[4] == "Y" {
+					result := FindWord(grid, word)
+					if len(result) > 0 {
+						fmt.Println("La palabra", word, "se encuentra en las posiciones:", result)
+					} else {
+						fmt.Println("La palabra", word, "no se encuentra en la sopa de letras")
+					}
+				} else {
+					FindWord(grid, word)
+				}
 				wg.Done()
 			}(word, &wg)
 		}
@@ -58,7 +72,16 @@ func main() {
 		// Find the words in the grid and search for each word sequentially
 		time_start := time.Now()
 		for _, word := range words {
-			FindWord(grid, word)
+			if os.Args[4] == "Y" {
+				result := FindWord(grid, word)
+				if len(result) > 0 {
+					fmt.Println("La palabra", word, "se encuentra en las posiciones:", result)
+				} else {
+					fmt.Println("La palabra", word, "no se encuentra en la sopa de letras")
+				}
+			} else {
+				FindWord(grid, word)
+			}
 		}
 		fmt.Fprint(os.Stderr, "Tiempo de ejecución: ", time.Since(time_start), "\n")
 
