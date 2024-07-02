@@ -45,46 +45,46 @@ func main() {
 	}
 	fmt.Println("Tiempo de lectura de las palabras:", time.Since(time_start))
 
+	resultado_busqueda := make([]string, 0, len(words))
+
 	if os.Args[3] == "Y" {
 		// Find the words in the grid and parallelize the search for each word
 		time_start := time.Now()
 		wg := sync.WaitGroup{}
+		mut := sync.RWMutex{}
 		for _, word := range words {
 			wg.Add(1)
-			go func(word string, wg *sync.WaitGroup) {
-				if os.Args[4] == "Y" {
-					result := FindWord(grid, word)
-					if len(result) > 0 {
-						fmt.Println("La palabra", word, "se encuentra en las posiciones:", result)
-					} else {
-						fmt.Println("La palabra", word, "no se encuentra en la sopa de letras")
-					}
-				} else {
-					FindWord(grid, word)
+			go func(word string, wg *sync.WaitGroup, mut *sync.RWMutex) {
+				result := FindWord(grid, word)
+				if len(result) > 0 {
+					mut.Lock()
+					resultado_busqueda = append(resultado_busqueda, fmt.Sprint("La palabra ", word, " se encuentra en las posiciones: ", result))
+					mut.Unlock()
 				}
 				wg.Done()
-			}(word, &wg)
+			}(word, &wg, &mut)
 		}
 		wg.Wait()
+		fmt.Println("Se han buscado", float32(len(resultado_busqueda)/len(words))*100, "% de laspalabras")
 		fmt.Fprint(os.Stderr, "Tiempo de ejecución: ", time.Since(time_start), "\n")
 
 	} else {
 		// Find the words in the grid and search for each word sequentially
 		time_start := time.Now()
 		for _, word := range words {
-			if os.Args[4] == "Y" {
-				result := FindWord(grid, word)
-				if len(result) > 0 {
-					fmt.Println("La palabra", word, "se encuentra en las posiciones:", result)
-				} else {
-					fmt.Println("La palabra", word, "no se encuentra en la sopa de letras")
-				}
-			} else {
-				FindWord(grid, word)
+			result := FindWord(grid, word)
+			if len(result) > 0 {
+				resultado_busqueda = append(resultado_busqueda, fmt.Sprint("La palabra ", word, " se encuentra en las posiciones: ", result))
 			}
 		}
+		fmt.Println("Se han buscado", float32(len(resultado_busqueda)/len(words))*100, "% de laspalabras")
 		fmt.Fprint(os.Stderr, "Tiempo de ejecución: ", time.Since(time_start), "\n")
+	}
 
+	if os.Args[4] == "Y" {
+		for _, res := range resultado_busqueda {
+			fmt.Println(res)
+		}
 	}
 
 }
