@@ -94,27 +94,22 @@ func ContinuaPalabra(grid [][]rune, word string, i int, j int, result [][2]int, 
 		return result, nil
 	}
 	res := result
-	directions_loc := [][2]int{}
-	if direction != [2]int{0, 0} {
-		directions_loc = append(directions_loc, direction)
-	} else {
-		directions_loc = directions
-	}
-	for _, direction := range directions_loc {
-		res = result
-		new_x := i + direction[0]
-		new_y := j + direction[1]
-		if new_x >= 0 && new_x < len(grid) && new_y >= 0 && new_y < len(grid[0]) && grid[new_x][new_y] == rune(word[0]) {
+	new_x := i
+	new_y := j
+	for _, letter := range word {
+		new_x += direction[0]
+		new_y += direction[1]
+		if new_x >= 0 && new_x < len(grid) && new_y >= 0 && new_y < len(grid[0]) && grid[new_x][new_y] == letter {
 			res = append(res, [2]int{new_x, new_y})
-			result, err := ContinuaPalabra(grid, word[1:], new_x, new_y, res, direction)
-			if err != nil {
-				continue
-			}
-			return result, nil
+		} else {
+			return res, errors.New("no se ha encontrado la palabra")
 		}
 	}
+
 	if len(res) == 1 {
 		res = res[:0]
+	} else if len(res) == len(word)+2 {
+		return res, nil
 	}
 	return res, errors.New("no se ha encontrado la palabra")
 }
@@ -125,10 +120,18 @@ func FindWord(grid [][]rune, word string) [][2]int {
 		for j, cell := range row {
 			if cell == rune(word[0]) {
 				result_loc = append(result_loc, [2]int{i, j})
-				result, _ := ContinuaPalabra(grid, word[1:], i, j, result_loc, [2]int{0, 0})
-
-				if len(result) == len(word) {
-					return result
+				for _, direction := range directions {
+					new_x := i + direction[0]
+					new_y := j + direction[1]
+					if new_x >= 0 && new_x < len(grid) && new_y >= 0 && new_y < len(grid[0]) && grid[new_x][new_y] == rune(word[1]) {
+						result_loc = append(result_loc, [2]int{new_x, new_y})
+						result, _ := ContinuaPalabra(grid, word[2:], new_x, new_y, result_loc, [2]int{direction[0], direction[1]})
+						if len(result) == len(word) {
+							return result
+						} else {
+							result_loc = result_loc[:1]
+						}
+					}
 				}
 				result_loc = result_loc[:0]
 			} else {
